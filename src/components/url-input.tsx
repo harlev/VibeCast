@@ -31,13 +31,13 @@ export function UrlInput() {
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="Paste YouTube URL..."
-          className="flex-1 px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+          className="flex-1 px-3 py-2.5 bg-[--color-elevated] border border-[--color-border] rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500 transition-colors"
           disabled={adding}
         />
         <button
           type="submit"
           disabled={adding || !url.trim()}
-          className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-medium rounded-lg transition-colors shrink-0"
+          className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:bg-zinc-700 disabled:text-zinc-500 text-white text-sm font-medium rounded-lg transition-colors shrink-0"
         >
           {adding ? (
             <span className="inline-flex items-center gap-2">
@@ -60,12 +60,12 @@ export function UrlInput() {
               Adding...
             </span>
           ) : (
-            "Add to Queue"
+            "Add"
           )}
         </button>
       </div>
       {error && (
-        <p className="mt-2 text-sm text-red-400">{error}</p>
+        <p className="mt-2 text-sm text-rose-400">{error}</p>
       )}
     </form>
   );

@@ -93,6 +93,28 @@ export async function pickNextConcept(
   return match ?? concepts[0];
 }
 
+const SEARCH_ANGLES = [
+  "focus on visual beauty and cinematography",
+  "look for popular, high-view-count content",
+  "find hidden gems from smaller channels",
+  "focus on relaxing, calming, ambient content",
+  "find educational or documentary style content",
+  "look for compilation or 'best of' style videos",
+  "find content from well-known creators or channels",
+  "focus on unique or unusual perspectives",
+  "look for long-form, immersive experiences",
+  "find upbeat, energetic, inspiring content",
+  "focus on behind-the-scenes or making-of content",
+  "look for travel or exploration content",
+  "find slow-paced, meditative content",
+  "focus on storytelling and narrative content",
+];
+
+function pickRandom<T>(arr: T[], count: number): T[] {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(count, shuffled.length));
+}
+
 export async function generateSearchQueries(
   concept: string,
   queueTitles: string[],
@@ -104,19 +126,39 @@ export async function generateSearchQueries(
     return [concept];
   }
 
+  // Only mention season ~30% of the time to avoid every query being "winter X"
+  const includeSeason = Math.random() < 0.3;
+  const angles = pickRandom(SEARCH_ANGLES, 2);
+
   const systemPrompt =
-    'You are a video curator for a home ambient TV channel. Generate 3-5 YouTube search queries for the given concept. Consider season, time of day, and queue variety. Prefer documentaries, compilations, scenic footage. Avoid news/political content. Return ONLY a JSON array of strings, e.g. ["query 1", "query 2"].';
-  const userMessage = JSON.stringify({
+    `You are a video curator for a home ambient TV channel. Generate 3-5 diverse YouTube search queries for the given concept.
+
+IMPORTANT RULES FOR VARIETY:
+- Each query should explore a DIFFERENT angle or sub-topic of the concept
+- Do NOT repeat similar query patterns — vary the wording, style, and focus
+- Do NOT put seasonal words (winter, summer, spring, fall, etc.) in more than 1 query${includeSeason ? "" : " — skip seasonal references entirely this time"}
+- Do NOT put time-of-day words in queries
+- Mix formats: some specific, some broad, some creative/unexpected
+- Prefer documentaries, compilations, scenic footage
+- Avoid news/political content
+
+Suggested angles for this batch: ${angles.join("; ")}.
+
+Return ONLY a JSON array of strings, e.g. ["query 1", "query 2"].`;
+
+  const userPayload: Record<string, unknown> = {
     concept,
-    season: getSeason(),
-    timeOfDay: getTimeOfDay(),
     currentQueue: queueTitles,
     recentHistory: historyTitles.slice(-20),
-  });
+  };
+  if (includeSeason) {
+    userPayload.season = getSeason();
+  }
+  const userMessage = JSON.stringify(userPayload);
 
   const response = await client.chat.completions.create({
     model: "gpt-4o-mini",
-    temperature: 0.7,
+    temperature: 0.9,
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userMessage },

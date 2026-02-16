@@ -48,12 +48,12 @@ export function ConceptManager() {
         {config.concepts.map((concept) => (
           <span
             key={concept}
-            className="inline-flex items-center gap-1 bg-red-950/30 text-red-300 border border-red-900/40 px-3 py-1 rounded-full text-sm"
+            className="inline-flex items-center gap-1 bg-rose-950/30 text-rose-300 border border-rose-800/40 px-3 py-1 rounded-full text-sm animate-pill-appear"
           >
             {concept}
             <button
               onClick={() => removeConcept(concept)}
-              className="ml-0.5 text-red-400/60 hover:text-red-300 transition-colors"
+              className="ml-0.5 text-rose-400/60 hover:text-rose-300 transition-colors"
             >
               <svg
                 className="w-3.5 h-3.5"
@@ -86,17 +86,17 @@ export function ConceptManager() {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Add a concept..."
-          className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-red-500/50 transition-colors"
+          className="flex-1 bg-[--color-elevated] border border-[--color-border] rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500/50 transition-colors"
         />
         <button
           onClick={addConcept}
           disabled={!input.trim()}
-          className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white text-sm font-medium rounded-lg transition-colors"
+          className="px-4 py-2 bg-rose-600 hover:bg-rose-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white text-sm font-medium rounded-lg transition-colors"
         >
           Add
         </button>
       </div>
-      {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+      {error && <p className="text-rose-400 text-xs mt-1">{error}</p>}
     </div>
   );
 }

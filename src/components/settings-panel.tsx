@@ -79,57 +79,57 @@ export function SettingsPanel() {
   );
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-4">
-        {/* Auto-curation toggle */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleCuration}
-            className={`relative w-10 h-5 rounded-full transition-colors ${
-              config.curateEnabled ? "bg-red-600" : "bg-zinc-700"
+    <div className="flex flex-col gap-5">
+      {/* Auto-curation toggle */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-zinc-300">Auto-curate</span>
+        <button
+          onClick={toggleCuration}
+          className={`relative w-10 h-5 rounded-full transition-colors ${
+            config.curateEnabled ? "bg-rose-600" : "bg-zinc-700"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+              config.curateEnabled ? "left-5.5" : "left-0.5"
             }`}
-          >
-            <span
-              className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-                config.curateEnabled ? "left-5.5" : "left-0.5"
-              }`}
-            />
-          </button>
-          <span className="text-sm text-zinc-300">Auto-curate</span>
-        </div>
-
-        {/* Queue size */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-zinc-500">Queue</label>
-          <input
-            type="number"
-            min={1}
-            max={20}
-            value={config.queueSize}
-            onChange={(e) => setQueueSize(parseInt(e.target.value) || 5)}
-            className="w-14 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white text-center focus:outline-none focus:border-red-500/50"
           />
-        </div>
+        </button>
+      </div>
 
-        {/* Quality toggle */}
-        <div className="flex items-center gap-1">
-          <label className="text-sm text-zinc-500 mr-1">Quality</label>
+      {/* Queue size */}
+      <div className="flex items-center justify-between">
+        <label className="text-sm text-zinc-300">Queue size</label>
+        <input
+          type="number"
+          min={1}
+          max={20}
+          value={config.queueSize}
+          onChange={(e) => setQueueSize(parseInt(e.target.value) || 5)}
+          className="w-16 bg-[--color-elevated] border border-[--color-border] rounded-lg px-2 py-1.5 text-sm text-white text-center focus:outline-none focus:border-rose-500/50"
+        />
+      </div>
+
+      {/* Quality toggle */}
+      <div className="flex items-center justify-between">
+        <label className="text-sm text-zinc-300">Quality</label>
+        <div className="flex items-center gap-0">
           <button
             onClick={() => setQuality("720p")}
-            className={`px-2 py-1 text-xs rounded-l border ${
+            className={`px-3 py-1.5 text-xs rounded-l-lg border ${
               config.quality === "720p"
-                ? "bg-red-600/20 border-red-600/50 text-red-300"
-                : "bg-zinc-800 border-zinc-700 text-zinc-500 hover:text-zinc-300"
+                ? "bg-rose-600/20 border-rose-600/50 text-rose-300"
+                : "bg-[--color-elevated] border-[--color-border] text-zinc-500 hover:text-zinc-300"
             }`}
           >
             720p
           </button>
           <button
             onClick={() => setQuality("1080p")}
-            className={`px-2 py-1 text-xs rounded-r border border-l-0 ${
+            className={`px-3 py-1.5 text-xs rounded-r-lg border border-l-0 ${
               config.quality === "1080p"
-                ? "bg-red-600/20 border-red-600/50 text-red-300"
-                : "bg-zinc-800 border-zinc-700 text-zinc-500 hover:text-zinc-300"
+                ? "bg-rose-600/20 border-rose-600/50 text-rose-300"
+                : "bg-[--color-elevated] border-[--color-border] text-zinc-500 hover:text-zinc-300"
             }`}
           >
             1080p
@@ -138,22 +138,37 @@ export function SettingsPanel() {
       </div>
 
       {/* OpenAI API Key */}
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="text-sm text-zinc-500">OpenAI Key</label>
-        {isEditingKey ? (
-          <>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <label className="text-sm text-zinc-300">OpenAI Key</label>
+          {!isEditingKey && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-zinc-500 font-mono">
+                {apiKeyConfigured ? apiKeyMasked : "Not set"}
+              </span>
+              <button
+                onClick={() => setIsEditingKey(true)}
+                className="px-2 py-1 text-xs bg-[--color-elevated] border border-[--color-border] text-zinc-500 rounded-lg hover:text-zinc-300 transition-colors"
+              >
+                {apiKeyConfigured ? "Edit" : "Set"}
+              </button>
+            </div>
+          )}
+        </div>
+        {isEditingKey && (
+          <div className="flex items-center gap-2">
             <input
               type="password"
               value={apiKeyInput}
               onChange={(e) => setApiKeyInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && saveApiKey()}
               placeholder="sk-..."
-              className="w-48 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-red-500/50"
+              className="flex-1 bg-[--color-elevated] border border-[--color-border] rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-rose-500/50"
               autoFocus
             />
             <button
               onClick={saveApiKey}
-              className="px-2 py-1 text-xs bg-red-600/20 border border-red-600/50 text-red-300 rounded hover:bg-red-600/30"
+              className="px-3 py-1.5 text-xs bg-rose-600/20 border border-rose-600/50 text-rose-300 rounded-lg hover:bg-rose-600/30"
             >
               Save
             </button>
@@ -163,28 +178,16 @@ export function SettingsPanel() {
                 setApiKeyInput("");
                 setSaveMessage(null);
               }}
-              className="px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 text-zinc-500 rounded hover:text-zinc-300"
+              className="px-3 py-1.5 text-xs bg-[--color-elevated] border border-[--color-border] text-zinc-500 rounded-lg hover:text-zinc-300"
             >
               Cancel
             </button>
-          </>
-        ) : (
-          <>
-            <span className="text-sm text-zinc-400 font-mono">
-              {apiKeyConfigured ? apiKeyMasked : "Not set"}
-            </span>
-            <button
-              onClick={() => setIsEditingKey(true)}
-              className="px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 text-zinc-500 rounded hover:text-zinc-300"
-            >
-              {apiKeyConfigured ? "Edit" : "Set"}
-            </button>
-          </>
+          </div>
         )}
         {saveMessage && (
           <span
             className={`text-xs ${
-              saveMessage.type === "success" ? "text-green-400" : "text-red-400"
+              saveMessage.type === "success" ? "text-green-400" : "text-rose-400"
             }`}
           >
             {saveMessage.text}

@@ -29,11 +29,11 @@ export function CurationStatus() {
   const label = phaseLabels[curation.phase] || null;
 
   return (
-    <div className="rounded-lg bg-zinc-800/50 border border-zinc-700/50 px-4 py-3">
+    <div className="rounded-lg bg-[--color-elevated] border border-[--color-border] px-4 py-3">
       <div className="flex items-center gap-2">
         {isActive && (
           <svg
-            className="animate-spin h-4 w-4 text-red-400 shrink-0"
+            className="animate-spin h-4 w-4 text-rose-400 shrink-0"
             viewBox="0 0 24 24"
           >
             <circle
@@ -57,14 +57,14 @@ export function CurationStatus() {
             <>
               {label}
               {curation.currentConcept && (
-                <span className="text-red-400">
+                <span className="text-rose-400">
                   {" "}
                   &mdash; {curation.currentConcept}
                 </span>
               )}
             </>
           ) : curation.lastError ? (
-            <span className="text-red-400/80">{curation.lastError}</span>
+            <span className="text-rose-400/80">{curation.lastError}</span>
           ) : curation.lastRun ? (
             <span className="text-zinc-500">
               {curation.videosAdded} videos curated total

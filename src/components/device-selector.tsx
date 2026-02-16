@@ -39,11 +39,11 @@ export function DeviceSelector({
 
   return (
     <div className="flex items-center gap-2">
-      <div className="relative flex-1">
+      <div className="relative">
         <select
           value={selectedDeviceId || selectedDevice?.id || ""}
           onChange={handleChange}
-          className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white appearance-none cursor-pointer focus:outline-none focus:border-red-500 pr-10"
+          className="px-3 py-1.5 bg-[--color-elevated] border border-[--color-border] rounded-lg text-sm text-white appearance-none cursor-pointer focus:outline-none focus:border-rose-500 pr-8"
           disabled={loading}
         >
           {devices.length === 0 && (
@@ -58,7 +58,7 @@ export function DeviceSelector({
           ))}
         </select>
         <svg
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -74,11 +74,11 @@ export function DeviceSelector({
       <button
         onClick={scan}
         disabled={loading}
-        className="px-3 py-2.5 bg-zinc-800 border border-zinc-700 hover:border-zinc-600 rounded-lg text-zinc-400 hover:text-white transition-colors"
+        className="p-1.5 bg-[--color-elevated] border border-[--color-border] hover:border-zinc-600 rounded-lg text-zinc-400 hover:text-white transition-colors"
         title="Rescan for devices"
       >
         <svg
-          className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
+          className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -92,8 +92,8 @@ export function DeviceSelector({
         </svg>
       </button>
       {playback.connected && (
-        <span className="flex items-center gap-1.5 text-sm text-green-400">
-          <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+        <span className="flex items-center gap-1.5 text-xs text-green-400">
+          <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
           Connected
         </span>
       )}

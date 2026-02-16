@@ -22,9 +22,9 @@ function StatusBadge({ item }: { item: QueueItem }) {
       className: "bg-blue-600/20 text-blue-400",
     },
     ready: { label: "Ready", className: "bg-green-600/20 text-green-400" },
-    playing: { label: "Playing", className: "bg-red-600/20 text-red-400" },
+    playing: { label: "Playing", className: "bg-rose-600/20 text-rose-400" },
     played: { label: "Played", className: "bg-zinc-700 text-zinc-500" },
-    error: { label: "Error", className: "bg-red-900/30 text-red-400" },
+    error: { label: "Error", className: "bg-rose-900/30 text-rose-400" },
   };
 
   const config = statusConfig[item.status] || statusConfig.pending;
@@ -41,7 +41,7 @@ function StatusBadge({ item }: { item: QueueItem }) {
 function SourceBadge({ item }: { item: QueueItem }) {
   if (item.source === "curated") {
     return (
-      <span className="text-xs px-1.5 py-0.5 rounded bg-red-950/40 text-red-400/80 border border-red-900/30">
+      <span className="text-xs px-1.5 py-0.5 rounded bg-rose-950/40 text-rose-400/80 border border-rose-900/30">
         curated
       </span>
     );
@@ -75,14 +75,14 @@ function QueueItemRow({
     <div
       className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
         item.status === "playing"
-          ? "bg-red-950/20 border border-red-900/30"
+          ? "bg-rose-950/20 border border-rose-800/40 animate-playing-glow"
           : item.status === "played"
-            ? "bg-zinc-800/30 opacity-60"
-            : "bg-zinc-800/50 hover:bg-zinc-800"
+            ? "bg-[--color-surface] opacity-60"
+            : "bg-[--color-surface] hover:bg-[--color-elevated]"
       }`}
     >
       {/* Thumbnail */}
-      <div className="relative w-20 h-12 shrink-0 rounded overflow-hidden bg-zinc-700">
+      <div className="relative w-24 h-16 shrink-0 rounded-md overflow-hidden bg-zinc-700">
         {item.video.thumbnail && (
           <img
             src={item.video.thumbnail}
@@ -125,7 +125,7 @@ function QueueItemRow({
             <span className="text-xs text-zinc-600">{item.concept}</span>
           )}
           {item.error && (
-            <span className="text-xs text-red-400 truncate">{item.error}</span>
+            <span className="text-xs text-rose-400 truncate">{item.error}</span>
           )}
         </div>
       </div>
@@ -151,7 +151,7 @@ function QueueItemRow({
         {canRemove && (
           <button
             onClick={() => removeFromQueue(item.queueId)}
-            className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors"
+            className="p-1.5 text-zinc-500 hover:text-rose-400 transition-colors"
             title="Remove"
           >
             <svg
@@ -182,17 +182,21 @@ export function QueueList({ selectedDevice }: { selectedDevice?: CastDevice | nu
 
   if (queue.length === 0) {
     return (
-      <div className="text-center text-zinc-500 py-8">
-        Queue is empty. Add a video or enable auto-curation above.
+      <div className="flex flex-col items-center justify-center h-full text-zinc-500">
+        <svg className="w-12 h-12 mb-3 text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+        </svg>
+        <p className="text-sm">Queue is empty</p>
+        <p className="text-xs text-zinc-600 mt-1">Add concepts or a video URL to get started</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
-          Queue ({queue.length})
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold text-white">
+          Queue <span className="text-zinc-500 text-sm font-normal">({queue.length})</span>
         </h2>
         {hasPlayed && (
           <button
