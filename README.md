@@ -1,6 +1,9 @@
 # VibeCast
 
-**Ambient video casting for your TV, powered by auto-curation.**
+**Ambient video casting for your TV, powered by AI curation.**
+
+<img width="1465" height="828" alt="image" src="https://github.com/user-attachments/assets/4dcfb471-8395-444d-bf9a-b76295ea7722" />  
+
 
 VibeCast is a self-hosted web app that automatically discovers, curates, and casts YouTube videos to your Chromecast. Define concepts like "nature documentaries" or "space exploration", and VibeCast keeps your TV playing a rotating mix of quality content — no manual searching required.
 
