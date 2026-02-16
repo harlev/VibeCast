@@ -1,0 +1,7 @@
+node_modules
+.next
+.git
+.env*
+downloads/*.mp4
+data/*.json
+.DS_Store

@@ -24,7 +24,7 @@ class AutoCurator extends EventEmitter {
     lastError: null,
     videosAdded: 0,
   };
-  private timer: ReturnType<typeof setTimeout> | null = null;
+  private timer: ReturnType<typeof setInterval> | null = null;
   private pipelineRunning = false;
   private recentConcepts: string[] = [];
 
@@ -35,14 +35,16 @@ class AutoCurator extends EventEmitter {
   start(): void {
     // Reset stale state (singleton survives HMR)
     this.pipelineRunning = false;
+    if (this.timer) clearInterval(this.timer);
     this.status.running = true;
     this.status.phase = "idle";
     this.emitStatus();
     console.log("[AutoCurator] Started");
-    // Run immediately, then schedule recurring checks
-    this.checkAndRefill().catch((err) => {
-      console.error("[AutoCurator] checkAndRefill error:", err);
-    });
+    // Run immediately, then check every 30s via interval (resilient to pipeline errors)
+    this.checkAndRefill();
+    this.timer = setInterval(() => {
+      this.checkAndRefill();
+    }, CHECK_INTERVAL);
   }
 
   stop(): void {
@@ -50,7 +52,7 @@ class AutoCurator extends EventEmitter {
     this.status.phase = "idle";
     this.pipelineRunning = false;
     if (this.timer) {
-      clearTimeout(this.timer);
+      clearInterval(this.timer);
       this.timer = null;
     }
     this.emitStatus();
@@ -65,32 +67,23 @@ class AutoCurator extends EventEmitter {
     });
   }
 
-  private scheduleCheck(): void {
-    if (this.timer) clearTimeout(this.timer);
-    if (!this.status.running) return;
-
-    this.timer = setTimeout(() => {
-      this.checkAndRefill().catch((err) => {
-        console.error("[AutoCurator] scheduled checkAndRefill error:", err);
-      });
-    }, CHECK_INTERVAL);
-  }
-
   private async checkAndRefill(): Promise<void> {
     if (!this.status.running) return;
 
-    const config = configManager.getConfig();
-    const activeCount = queueManager.activeItemCount();
+    try {
+      const config = configManager.getConfig();
+      const activeCount = queueManager.activeItemCount();
 
-    console.log(
-      `[AutoCurator] Check: ${activeCount} active, need ${config.queueSize}, ${config.concepts.length} concepts`
-    );
+      console.log(
+        `[AutoCurator] Check: ${activeCount} active, need ${config.queueSize}, ${config.concepts.length} concepts`
+      );
 
-    if (activeCount < config.queueSize && config.concepts.length > 0) {
-      await this.runPipeline();
+      if (activeCount < config.queueSize && config.concepts.length > 0) {
+        await this.runPipeline();
+      }
+    } catch (err) {
+      console.error("[AutoCurator] checkAndRefill error:", err);
     }
-
-    this.scheduleCheck();
   }
 
   private async runPipeline(): Promise<void> {
@@ -218,7 +211,8 @@ class AutoCurator extends EventEmitter {
       // Step 6: Add top picks to queue
       this.updatePhase("adding-to-queue");
       const needed = config.queueSize - queueManager.activeItemCount();
-      const toAdd = approvedIds.slice(0, Math.max(needed, 1));
+      const maxPerRun = config.concepts.length > 1 ? 1 : Math.max(needed, 1);
+      const toAdd = approvedIds.slice(0, maxPerRun);
       let added = 0;
 
       for (const videoId of toAdd) {
@@ -277,3 +271,9 @@ export const autoCurator =
   globalForCurator.autoCurator ?? new AutoCurator();
 
 globalForCurator.autoCurator = autoCurator;
+
+// Auto-start if persisted config says curation is enabled (e.g. after server restart)
+if (!autoCurator.getStatus().running && configManager.getConfig().curateEnabled) {
+  console.log("[AutoCurator] Auto-starting from persisted config");
+  autoCurator.start();
+}

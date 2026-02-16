@@ -7,6 +7,31 @@ function getOpenAIClient(): OpenAI | null {
   return new OpenAI({ apiKey: key });
 }
 
+function truncate(str: string, max: number): string {
+  return str.length > max ? str.slice(0, max) + "..." : str;
+}
+
+function logLLMCall(
+  name: string,
+  model: string,
+  systemPrompt: string,
+  userMessage: string,
+  response: string,
+  usage: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number } | undefined
+): void {
+  console.log(`[Curator] === LLM Call: ${name} ===`);
+  console.log(`[Curator] model: ${model}`);
+  console.log(`[Curator] system: ${truncate(systemPrompt, 300)}`);
+  console.log(`[Curator] user: ${truncate(userMessage, 500)}`);
+  console.log(`[Curator] response: ${truncate(response, 500)}`);
+  if (usage) {
+    console.log(
+      `[Curator] tokens: prompt=${usage.prompt_tokens ?? "?"} completion=${usage.completion_tokens ?? "?"} total=${usage.total_tokens ?? "?"}`
+    );
+  }
+  console.log(`[Curator] === End ${name} ===`);
+}
+
 export function isLLMAvailable(): boolean {
   return getOpenAIClient() !== null;
 }
@@ -40,29 +65,27 @@ export async function pickNextConcept(
     return concepts[(lastIdx + 1) % concepts.length];
   }
 
+  const systemPrompt =
+    "Pick the next concept to search for a TV video queue. Consider variety and what's already queued. Return ONLY the concept string, no quotes, no explanation.";
+  const userMessage = JSON.stringify({
+    availableConcepts: concepts,
+    currentQueue: currentQueueTitles,
+    recentlyUsedConcepts: recentConcepts,
+    timeOfDay: getTimeOfDay(),
+    season: getSeason(),
+  });
+
   const response = await client.chat.completions.create({
     model: "gpt-4o-mini",
     temperature: 0.3,
     messages: [
-      {
-        role: "system",
-        content:
-          "Pick the next concept to search for a TV video queue. Consider variety and what's already queued. Return ONLY the concept string, no quotes, no explanation.",
-      },
-      {
-        role: "user",
-        content: JSON.stringify({
-          availableConcepts: concepts,
-          currentQueue: currentQueueTitles,
-          recentlyUsedConcepts: recentConcepts,
-          timeOfDay: getTimeOfDay(),
-          season: getSeason(),
-        }),
-      },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMessage },
     ],
   });
 
   const picked = response.choices[0]?.message?.content?.trim() ?? "";
+  logLLMCall("pickNextConcept", "gpt-4o-mini", systemPrompt, userMessage, picked, response.usage ?? undefined);
   // Verify it's actually one of the concepts
   const match = concepts.find(
     (c) => c.toLowerCase() === picked.toLowerCase()
@@ -81,29 +104,27 @@ export async function generateSearchQueries(
     return [concept];
   }
 
+  const systemPrompt =
+    'You are a video curator for a home ambient TV channel. Generate 3-5 YouTube search queries for the given concept. Consider season, time of day, and queue variety. Prefer documentaries, compilations, scenic footage. Avoid news/political content. Return ONLY a JSON array of strings, e.g. ["query 1", "query 2"].';
+  const userMessage = JSON.stringify({
+    concept,
+    season: getSeason(),
+    timeOfDay: getTimeOfDay(),
+    currentQueue: queueTitles,
+    recentHistory: historyTitles.slice(-20),
+  });
+
   const response = await client.chat.completions.create({
     model: "gpt-4o-mini",
     temperature: 0.7,
     messages: [
-      {
-        role: "system",
-        content:
-          'You are a video curator for a home ambient TV channel. Generate 3-5 YouTube search queries for the given concept. Consider season, time of day, and queue variety. Prefer documentaries, compilations, scenic footage. Avoid news/political content. Return ONLY a JSON array of strings, e.g. ["query 1", "query 2"].',
-      },
-      {
-        role: "user",
-        content: JSON.stringify({
-          concept,
-          season: getSeason(),
-          timeOfDay: getTimeOfDay(),
-          currentQueue: queueTitles,
-          recentHistory: historyTitles.slice(-20),
-        }),
-      },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMessage },
     ],
   });
 
   const text = response.choices[0]?.message?.content?.trim() ?? "[]";
+  logLLMCall("generateSearchQueries", "gpt-4o-mini", systemPrompt, userMessage, text, response.usage ?? undefined);
   try {
     const parsed = JSON.parse(text);
     if (Array.isArray(parsed) && parsed.length > 0) {
@@ -142,26 +163,24 @@ export async function curateResults(
     description: c.description?.slice(0, 200),
   }));
 
+  const systemPrompt =
+    'You are a content safety and quality reviewer for a home TV. REJECT: NSFW, violent, triggering, clickbait, reaction videos, ads, misleading titles, news/political. APPROVE: matches concept, reputable channel, engaging visuals, good view count. Return ONLY a JSON array of approved video IDs, best first, e.g. ["id1", "id2"].';
+  const userMessage = JSON.stringify({
+    concept,
+    candidates: candidateSummaries,
+  });
+
   const response = await client.chat.completions.create({
     model: "gpt-4o-mini",
     temperature: 0.3,
     messages: [
-      {
-        role: "system",
-        content:
-          'You are a content safety and quality reviewer for a home TV. REJECT: NSFW, violent, triggering, clickbait, reaction videos, ads, misleading titles, news/political. APPROVE: matches concept, reputable channel, engaging visuals, good view count. Return ONLY a JSON array of approved video IDs, best first, e.g. ["id1", "id2"].',
-      },
-      {
-        role: "user",
-        content: JSON.stringify({
-          concept,
-          candidates: candidateSummaries,
-        }),
-      },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMessage },
     ],
   });
 
   const text = response.choices[0]?.message?.content?.trim() ?? "[]";
+  logLLMCall("curateResults", "gpt-4o-mini", systemPrompt, userMessage, text, response.usage ?? undefined);
   try {
     const parsed = JSON.parse(text);
     if (Array.isArray(parsed)) {

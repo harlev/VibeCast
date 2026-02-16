@@ -1,12 +1,39 @@
 import { NextRequest } from "next/server";
 import fs from "fs";
 import path from "path";
-import { Readable } from "stream";
 
 const DOWNLOADS_DIR = path.join(process.cwd(), "downloads");
 
 function nodeStreamToWeb(nodeStream: fs.ReadStream): ReadableStream<Uint8Array> {
-  return Readable.toWeb(nodeStream) as ReadableStream<Uint8Array>;
+  let destroyed = false;
+  const destroy = () => {
+    if (!destroyed) {
+      destroyed = true;
+      nodeStream.destroy();
+    }
+  };
+
+  return new ReadableStream({
+    start(controller) {
+      nodeStream.on("data", (chunk: string | Buffer) => {
+        try {
+          const buf = typeof chunk === "string" ? Buffer.from(chunk) : chunk;
+          controller.enqueue(new Uint8Array(buf));
+        } catch {
+          destroy();
+        }
+      });
+      nodeStream.on("end", () => {
+        try { controller.close(); } catch { /* already closed */ }
+      });
+      nodeStream.on("error", (err) => {
+        try { controller.error(err); } catch { /* already closed */ }
+      });
+    },
+    cancel() {
+      destroy();
+    },
+  });
 }
 
 function resolveFile(id: string): { filePath: string; fileSize: number } | null {

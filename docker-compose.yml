@@ -1,0 +1,11 @@
+services:
+  vibecast:
+    build: .
+    # host networking is REQUIRED for mDNS Chromecast discovery
+    # only works on Linux — see README for details
+    network_mode: host
+    volumes:
+      - ./data:/app/data
+      - ./downloads:/app/downloads
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}

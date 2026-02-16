@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   serverExternalPackages: ["castv2-client", "castv2", "bonjour-service"],
   images: {
     remotePatterns: [
