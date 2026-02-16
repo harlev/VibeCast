@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# downloaded videos
+/downloads/*.mp4
+/downloads/*.part
+
+# persistent data
+/data/*.json
