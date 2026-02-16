@@ -25,12 +25,26 @@ VibeCast is a self-hosted web app that automatically discovers, curates, and cas
 - **ffmpeg** — required by yt-dlp for video processing
 - **OpenAI API key** (optional) — enables smart concept selection, query generation, and content filtering
 
+Install scripts are provided to set up yt-dlp and ffmpeg automatically:
+
+```bash
+# macOS / Linux (uses Homebrew)
+bash scripts/install-deps.sh
+
+# Windows (PowerShell — uses winget, with direct-download fallback)
+powershell -ExecutionPolicy Bypass -File scripts/install-deps.ps1
+```
+
 ## Quick Start (Local)
 
 ```bash
 # Clone and install
 git clone <repo-url> && cd vibe-cast
 npm install
+
+# Install external dependencies (yt-dlp, ffmpeg)
+bash scripts/install-deps.sh      # macOS/Linux
+# or: powershell -ExecutionPolicy Bypass -File scripts/install-deps.ps1  # Windows
 
 # Optional: set OpenAI key for LLM-powered curation
 echo "OPENAI_API_KEY=sk-..." > .env.local
