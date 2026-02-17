@@ -1,4 +1,6 @@
 import { EventEmitter } from "events";
+import fs from "fs";
+import path from "path";
 import { QueueItem, QueueItemStatus, VideoInfo } from "@/types/video";
 import { downloadVideo, deleteDownload, splitIntoChunks, DownloadHandle } from "@/lib/ytdlp";
 import { castManager } from "@/lib/cast-manager";
@@ -8,13 +10,14 @@ import { historyManager } from "@/lib/history-manager";
 class QueueManager extends EventEmitter {
   private queue: QueueItem[] = [];
   private downloads: Map<string, DownloadHandle> = new Map();
-  private cleanupDelay = 60_000; // 1 min after played
+  private cleanupDelay = 2_000; // 2s grace period after played
   private wasConnected = false;
   private autoPlayLock = false;
 
   constructor() {
     super();
     this.setupCastListener();
+    this.cleanupOrphanedFiles();
   }
 
   private setupCastListener(): void {
@@ -296,7 +299,7 @@ class QueueManager extends EventEmitter {
       .filter((i) => i.status === "played")
       .sort((a, b) => b.addedAt - a.addedAt);
 
-    const toRemove = played.slice(3);
+    const toRemove = played.slice(1);
     for (const item of toRemove) {
       deleteDownload(item.video.id);
       const idx = this.queue.indexOf(item);
@@ -314,6 +317,26 @@ class QueueManager extends EventEmitter {
         deleteDownload(item.video.id);
       }
     }, this.cleanupDelay);
+  }
+
+  private cleanupOrphanedFiles(): void {
+    const downloadsDir = path.join(process.cwd(), "downloads");
+    if (!fs.existsSync(downloadsDir)) return;
+
+    const activeVideoIds = new Set(this.queue.map((i) => i.video.id));
+    try {
+      for (const file of fs.readdirSync(downloadsDir)) {
+        if (!file.endsWith(".mp4")) continue;
+        // Match both "videoId.mp4" and "videoId_chunk_000.mp4"
+        const videoId = file.replace(/_chunk_\d+\.mp4$/, "").replace(/\.mp4$/, "");
+        if (!activeVideoIds.has(videoId)) {
+          fs.unlinkSync(path.join(downloadsDir, file));
+          console.log(`[QueueManager] Cleaned up orphaned file: ${file}`);
+        }
+      }
+    } catch (err) {
+      console.error("[QueueManager] Orphan cleanup error:", err);
+    }
   }
 }
 
